@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { fetchDoctorById } from '../api/mockApi'
 import { useDispatch, useSelector } from 'react-redux'
 import { bookAppointment } from '../store/appointmentsSlice'
+
+const DOCTORS_API = 'https://mocki.io/v1/530b561f-cc03-47ba-9036-4886eb14510d'
 
 export default function BookAppointment() {
   const { doctorId } = useParams()
@@ -18,15 +19,34 @@ export default function BookAppointment() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetchDoctorById(doctorId)
-      .then((d) => {
-        setDoctor(d)
-        setLoading(false)
-      })
-      .catch((err) => {
+    async function loadDoctor() {
+      try {
+        setLoading(true)
+        setError('')
+
+        const res = await fetch(DOCTORS_API)
+        if (!res.ok) {
+          throw new Error('Failed to load doctor details')
+        }
+        const data = await res.json() // array of doctors from Mocki
+
+        // If your Mocki ids are strings like "d1", this comparison is fine.
+        // If they are numbers, use: data.find((d) => String(d.id) === doctorId)
+        const found = data.find((d) => d.id === doctorId)
+
+        if (!found) {
+          throw new Error('Doctor not found')
+        }
+
+        setDoctor(found)
+      } catch (err) {
         setError(err.message)
+      } finally {
         setLoading(false)
-      })
+      }
+    }
+
+    loadDoctor()
   }, [doctorId])
 
   const handleSubmit = async (e) => {

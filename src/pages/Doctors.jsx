@@ -5,16 +5,29 @@ import {
   setPage,
   setSearch,
   setSpecialization,
+  setLocation,
   setSortBy,
 } from '../store/doctorsSlice'
 import { Link } from 'react-router-dom'
 
 export default function Doctors() {
   const dispatch = useDispatch()
-  const { list, total, page, limit, search, specialization, sortBy, status, error } =
-    useSelector((state) => state.doctors)
+  const {
+    list,
+    total,
+    page,
+    limit,
+    search,
+    specialization,
+    location,
+    sortBy,
+    status,
+    error,
+  } = useSelector((state) => state.doctors)
 
+  // Local state for debounced inputs
   const [searchInput, setSearchInput] = useState(search)
+  const [locationInput, setLocationInput] = useState(location)
 
   // Debounce search
   useEffect(() => {
@@ -24,9 +37,20 @@ export default function Doctors() {
     return () => clearTimeout(id)
   }, [searchInput, dispatch])
 
+  // Debounce location
   useEffect(() => {
-    dispatch(loadDoctors({ page, limit, search, specialization, sortBy }))
-  }, [dispatch, page, limit, search, specialization, sortBy])
+    const id = setTimeout(() => {
+      dispatch(setLocation(locationInput))
+    }, 400)
+    return () => clearTimeout(id)
+  }, [locationInput, dispatch])
+
+  // Load doctors whenever filters/pagination change
+  useEffect(() => {
+    dispatch(
+      loadDoctors({ page, limit, search, specialization, sortBy, location }),
+    )
+  }, [dispatch, page, limit, search, specialization, sortBy, location])
 
   const totalPages = Math.ceil(total / limit) || 1
 
@@ -34,36 +58,57 @@ export default function Doctors() {
     <div>
       <h1 className="text-2xl font-semibold mb-4">Find Doctors</h1>
 
-      <div className="flex flex-wrap gap-4 mb-4">
+      {/* Filter bar */}
+      <div className="flex flex-wrap gap-3 mb-4">
         <input
           type="text"
           placeholder="Search by name or city"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="border rounded px-3 py-2 flex-1 min-w-[200px] dark:bg-gray-900 dark:border-gray-700"
+          className="border rounded px-3 py-2 flex-1 min-w-[180px] dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
         />
+
+        <input
+          type="text"
+          placeholder="Filter by city"
+          value={locationInput}
+          onChange={(e) => setLocationInput(e.target.value)}
+          className="border rounded px-3 py-2 min-w-[160px] dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+        />
+
         <select
           value={specialization}
           onChange={(e) => dispatch(setSpecialization(e.target.value))}
-          className="border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700"
+          className="border rounded px-3 py-2 min-w-[180px] dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
         >
           <option value="">All Specializations</option>
+          <option value="General Physician">General Physician</option>
           <option value="Cardiologist">Cardiologist</option>
           <option value="Dermatologist">Dermatologist</option>
+          <option value="Pediatrician">Pediatrician</option>
+          <option value="Orthopedic">Orthopedic</option>
+          <option value="Gynecologist">Gynecologist</option>
+          <option value="Dentist">Dentist</option>
+          <option value="Neurologist">Neurologist</option>
         </select>
+
         <select
           value={sortBy}
           onChange={(e) => dispatch(setSortBy(e.target.value))}
-          className="border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700"
+          className="border rounded px-3 py-2 min-w-[180px] dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
         >
           <option value="rating_desc">Rating: High to Low</option>
           <option value="experience_desc">Experience: High to Low</option>
         </select>
       </div>
 
+      {/* Status / error */}
       {status === 'loading' && <p>Loading doctors...</p>}
-      {status === 'failed' && <p className="text-red-500">Error: {error}</p>}
+      {status === 'failed' && (
+        <p className="text-red-500">Error: {error}</p>
+      )}
 
+      {/* Doctors grid */}
       <div className="grid md:grid-cols-2 gap-4">
         {list.map((doctor) => (
           <div
@@ -99,6 +144,7 @@ export default function Doctors() {
         ))}
       </div>
 
+      {/* Pagination */}
       <div className="flex justify-center items-center gap-2 mt-4">
         <button
           disabled={page === 1}
