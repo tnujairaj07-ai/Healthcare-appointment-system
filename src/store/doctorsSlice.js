@@ -20,6 +20,7 @@ const doctorsSlice = createSlice({
     limit: 5,
     search: '',
     specialization: '',
+    sortBy: 'rating_desc', // <- make sure this exists
   },
   reducers: {
     setPage(state, action) {
@@ -31,6 +32,10 @@ const doctorsSlice = createSlice({
     },
     setSpecialization(state, action) {
       state.specialization = action.payload
+      state.page = 1
+    },
+    setSortBy(state, action) {          // <- add this reducer
+      state.sortBy = action.payload
       state.page = 1
     },
   },
@@ -51,5 +56,11 @@ const doctorsSlice = createSlice({
   },
 })
 
-export const { setPage, setSearch, setSpecialization } = doctorsSlice.actions
+export const {
+  setPage,
+  setSearch,
+  setSpecialization,
+  setSortBy,      // <- make sure this is exported
+} = doctorsSlice.actions
+
 export default doctorsSlice.reducer

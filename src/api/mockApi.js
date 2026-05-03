@@ -23,7 +23,13 @@ let doctors = [
 
 let appointments = []
 
-export function fetchDoctors({ page = 1, limit = 5, search = '', specialization = '' }) {
+export function fetchDoctors({
+  page = 1,
+  limit = 5,
+  search = '',
+  specialization = '',
+  sortBy = 'rating_desc',
+}) {
   return new Promise((resolve) => {
     setTimeout(() => {
       let filtered = doctors
@@ -41,6 +47,12 @@ export function fetchDoctors({ page = 1, limit = 5, search = '', specialization 
         filtered = filtered.filter((d) => d.specialization === specialization)
       }
 
+      if (sortBy === 'rating_desc') {
+        filtered = [...filtered].sort((a, b) => b.rating - a.rating)
+      } else if (sortBy === 'experience_desc') {
+        filtered = [...filtered].sort((a, b) => b.experience - a.experience)
+      }
+
       const total = filtered.length
       const start = (page - 1) * limit
       const paginated = filtered.slice(start, start + limit)
@@ -49,6 +61,7 @@ export function fetchDoctors({ page = 1, limit = 5, search = '', specialization 
     }, 500)
   })
 }
+
 
 export function fetchDoctorById(id) {
   return new Promise((resolve, reject) => {
